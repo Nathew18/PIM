@@ -13,3 +13,9 @@ fun generateInviteCode(): String =
     (1..INVITE_CODE_LENGTH)
         .map { INVITE_CODE_ALPHABET[random.nextInt(INVITE_CODE_ALPHABET.length)] }
         .joinToString("")
+
+fun normalizeInviteCode(text: String): String = text.trim().uppercase()
+
+// Kod trafia do ścieżki dokumentu, więc np. zeskanowany adres ze znakiem "/" nie może tam dotrzeć.
+fun isValidInviteCode(code: String): Boolean =
+    code.length == INVITE_CODE_LENGTH && code.all { it in INVITE_CODE_ALPHABET }
