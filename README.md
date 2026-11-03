@@ -8,6 +8,7 @@ Projekt na przedmiot **Programowanie interfejsów mobilnych** (PWr, semestr zimo
 - Kotlin + Jetpack Compose (Material 3)
 - Android Studio Rabbit 1 | 2026.2.1
 - Firebase: Authentication, Cloud Firestore, Cloud Messaging
+- Kody QR: ZXing (tworzenie), Google Code Scanner (skanowanie, wymaga Usług Google Play)
 - Minimalna wersja: Android 8.0 (API 26)
 
 ## Uruchomienie
@@ -15,7 +16,7 @@ Projekt na przedmiot **Programowanie interfejsów mobilnych** (PWr, semestr zimo
 2. Otwórz folder w Android Studio (File → Open) i poczekaj na Gradle Sync.
 3. Uruchom na emulatorze (Device Manager) albo telefonie (USB / Wi-Fi).
 
-> Plik `app/google-services.json` z Firebase jest w repozytorium. To konfiguracja klienta, nie sekret: dane chronią reguły Firestore.
+> Plik `app/google-services.json` z Firebase jest w repozytorium. To konfiguracja klienta, nie sekret: dane mają chronić reguły Firestore. Na razie reguły są tymczasowe i wpuszczają każdego zalogowanego, właściwe dojdą w #7, więc nie wpisuj prawdziwych danych.
 
 ## Struktura kodu
 ```
@@ -23,7 +24,7 @@ app/src/main/java/com/pim/wspolnemieszkanie/
 ├── MainActivity.kt        # punkt startowy
 ├── ui/
 │   ├── MainScreen.kt      # Scaffold + dolny pasek zakładek
-│   ├── screens/           # ekrany: Wydatki, Zakupy, Obowiązki, Mieszkanie
+│   ├── screens/           # ekrany: Logowanie, Wydatki, Zakupy, Obowiązki, Mieszkanie
 │   └── theme/             # kolory i typografia (Material 3)
 ├── data/                  # modele i repozytoria (Firebase)
 └── viewmodel/             # ViewModele (MVVM)
