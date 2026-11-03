@@ -9,9 +9,11 @@ import com.pim.wspolnemieszkanie.ui.MainScreen
 import com.pim.wspolnemieszkanie.ui.screens.LoginScreen
 import com.pim.wspolnemieszkanie.ui.theme.WspolneMieszkanieTheme
 import com.pim.wspolnemieszkanie.viewmodel.AuthViewModel
+import com.pim.wspolnemieszkanie.viewmodel.FlatViewModel
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
+    private val flatViewModel: FlatViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,7 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             WspolneMieszkanieTheme {
                 if (authViewModel.isLoggedIn) {
-                    MainScreen(onLogout = authViewModel::logout)
+                    MainScreen(flatViewModel, onLogout = authViewModel::logout)
                 } else {
                     LoginScreen(authViewModel)
                 }
