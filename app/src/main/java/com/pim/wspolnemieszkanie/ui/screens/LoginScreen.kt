@@ -31,7 +31,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.pim.wspolnemieszkanie.viewmodel.AuthViewModel
 
-/** Jeden ekran na logowanie i rejestrację, różnią się tylko polem "Powtórz hasło". */
 @Composable
 fun LoginScreen(viewModel: AuthViewModel) {
     var isRegisterMode by rememberSaveable { mutableStateOf(false) }
