@@ -18,7 +18,6 @@ import com.pim.wspolnemieszkanie.ui.screens.ExpensesScreen
 import com.pim.wspolnemieszkanie.ui.screens.FlatScreen
 import com.pim.wspolnemieszkanie.ui.screens.ShoppingScreen
 
-/** Zakładki dolnego paska. Emoji jako ikony, żeby nie dodawać zależności material-icons. */
 enum class Tab(val label: String, val icon: String) {
     EXPENSES("Wydatki", "💰"),
     SHOPPING("Zakupy", "🛒"),

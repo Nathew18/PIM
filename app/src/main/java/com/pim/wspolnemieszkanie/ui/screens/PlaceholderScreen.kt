@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/** Tymczasowy ekran, każda osoba podmienia go na swój prawdziwy widok. */
 @Composable
 fun PlaceholderScreen(title: String, description: String) {
     Column(

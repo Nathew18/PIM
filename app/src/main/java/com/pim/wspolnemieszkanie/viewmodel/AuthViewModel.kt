@@ -14,7 +14,6 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
-/** Logowanie i rejestracja przez Firebase Authentication (FR1). */
 class AuthViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
@@ -26,7 +25,6 @@ class AuthViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    // Firebase sam zgłasza każdą zmianę sesji: logowanie, wylogowanie, wygaśnięcie konta.
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         isLoggedIn = firebaseAuth.currentUser != null
     }
@@ -63,7 +61,6 @@ class AuthViewModel : ViewModel() {
         errorMessage = null
     }
 
-    /** Wspólna obsługa ładowania i błędów. Po sukcesie ekran zmieni authListener. */
     private fun runAuthTask(task: Task<AuthResult>) {
         isLoading = true
         errorMessage = null
@@ -75,7 +72,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    /** Komunikaty Firebase są po angielsku, a interfejs ma być po polsku. */
     private fun polishMessage(error: Exception?): String = when (error) {
         // Słabe hasło musi być przed złymi danymi, bo dziedziczy po tym wyjątku.
         is FirebaseAuthWeakPasswordException -> "Hasło musi mieć co najmniej 6 znaków"
