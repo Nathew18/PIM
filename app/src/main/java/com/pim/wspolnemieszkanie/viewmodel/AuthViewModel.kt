@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.UserProfileChangeRequest
 
 class AuthViewModel : ViewModel() {
 
@@ -41,7 +42,11 @@ class AuthViewModel : ViewModel() {
         runAuthTask(auth.signInWithEmailAndPassword(email.trim(), password))
     }
 
-    fun register(email: String, password: String, repeatedPassword: String) {
+    fun register(name: String, email: String, password: String, repeatedPassword: String) {
+        if (name.isBlank()) {
+            errorMessage = "Podaj imię"
+            return
+        }
         if (email.isBlank() || password.isEmpty()) {
             errorMessage = "Podaj e-mail i hasło"
             return
@@ -50,7 +55,14 @@ class AuthViewModel : ViewModel() {
             errorMessage = "Hasła nie są takie same"
             return
         }
-        runAuthTask(auth.createUserWithEmailAndPassword(email.trim(), password))
+        val task = auth.createUserWithEmailAndPassword(email.trim(), password)
+        task.addOnSuccessListener { result ->
+            val profile = UserProfileChangeRequest.Builder()
+                .setDisplayName(name.trim())
+                .build()
+            result.user?.updateProfile(profile)
+        }
+        runAuthTask(task)
     }
 
     fun logout() {
