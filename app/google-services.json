@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "7357022996",
+    "project_id": "wspolne-mieszkanie",
+    "storage_bucket": "wspolne-mieszkanie.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7357022996:android:138b1ae0c7b6918fed7801",
+        "android_client_info": {
+          "package_name": "com.pim.wspolnemieszkanie"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7VctFUSe0zl1s2Ss85smlWSwrktC5dy0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
