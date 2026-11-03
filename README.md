@@ -15,7 +15,7 @@ Projekt na przedmiot **Programowanie interfejsów mobilnych** (PWr, semestr zimo
 2. Otwórz folder w Android Studio (File → Open) i poczekaj na Gradle Sync.
 3. Uruchom na emulatorze (Device Manager) albo telefonie (USB / Wi-Fi).
 
-> Plik `google-services.json` z Firebase nie jest w repozytorium. Poproś o niego zespół i wrzuć do folderu `app/`.
+> Plik `app/google-services.json` z Firebase jest w repozytorium. To konfiguracja klienta, nie sekret: dane chronią reguły Firestore.
 
 ## Struktura kodu
 ```
