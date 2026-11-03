@@ -27,7 +27,7 @@ enum class Tab(val label: String, val icon: String) {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onLogout: () -> Unit) {
     var selectedTab by rememberSaveable { mutableStateOf(Tab.EXPENSES) }
 
     Scaffold(
@@ -53,7 +53,7 @@ fun MainScreen() {
                 Tab.EXPENSES -> ExpensesScreen()
                 Tab.SHOPPING -> ShoppingScreen()
                 Tab.CHORES -> ChoresScreen()
-                Tab.FLAT -> FlatScreen()
+                Tab.FLAT -> FlatScreen(onLogout)
             }
         }
     }
