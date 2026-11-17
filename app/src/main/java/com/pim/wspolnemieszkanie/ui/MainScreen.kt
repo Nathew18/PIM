@@ -17,6 +17,7 @@ import com.pim.wspolnemieszkanie.ui.screens.ChoresScreen
 import com.pim.wspolnemieszkanie.ui.screens.ExpensesScreen
 import com.pim.wspolnemieszkanie.ui.screens.FlatScreen
 import com.pim.wspolnemieszkanie.ui.screens.ShoppingScreen
+import com.pim.wspolnemieszkanie.viewmodel.ExpensesViewModel
 import com.pim.wspolnemieszkanie.viewmodel.FlatViewModel
 
 enum class Tab(val label: String, val icon: String) {
@@ -27,7 +28,11 @@ enum class Tab(val label: String, val icon: String) {
 }
 
 @Composable
-fun MainScreen(flatViewModel: FlatViewModel, onLogout: () -> Unit) {
+fun MainScreen(
+    flatViewModel: FlatViewModel,
+    expensesViewModel: ExpensesViewModel,
+    onLogout: () -> Unit,
+) {
     var selectedTab by rememberSaveable { mutableStateOf(Tab.EXPENSES) }
 
     Scaffold(
@@ -50,7 +55,7 @@ fun MainScreen(flatViewModel: FlatViewModel, onLogout: () -> Unit) {
                 .padding(innerPadding)
         ) {
             when (selectedTab) {
-                Tab.EXPENSES -> ExpensesScreen()
+                Tab.EXPENSES -> ExpensesScreen(flatViewModel.flat, expensesViewModel)
                 Tab.SHOPPING -> ShoppingScreen()
                 Tab.CHORES -> ChoresScreen()
                 Tab.FLAT -> FlatScreen(flatViewModel, onLogout)
