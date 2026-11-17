@@ -1,19 +1,11 @@
 package com.pim.wspolnemieszkanie.data
 
-/** Jeden przelew do zrobienia: `from` oddaje `to` kwotę `amount` (w groszach). */
 data class Debt(val from: String, val to: String, val amount: Long)
 
-/**
- * Cała matematyka wydatków (FR6, FR7) w czystym Kotlinie, bez Firebase,
- * żeby dało się ją sprawdzić testami jednostkowymi (NFR6).
- */
+// Bez Firebase, żeby dało się to sprawdzić testami jednostkowymi.
 object BalanceCalculator {
 
-    /**
-     * Dzieli kwotę równo między osoby (FR6). Grosze, które się nie dzielą,
-     * dostają pierwsze osoby z listy, więc suma udziałów zawsze równa się kwocie.
-     * Przykład: 10000 gr na 3 osoby → 3334, 3333, 3333.
-     */
+    // Reszta groszy trafia do pierwszych osób, np. 10000 na 3 -> 3334, 3333, 3333.
     fun splitEqually(amount: Long, people: List<String>): Map<String, Long> {
         require(amount > 0) { "Kwota musi być dodatnia" }
         val unique = people.distinct()
@@ -26,13 +18,7 @@ object BalanceCalculator {
         }.toMap()
     }
 
-    /**
-     * Saldo netto każdej osoby w groszach (FR7).
-     * Dodatnie = inni są jej winni, ujemne = ona jest winna innym.
-     *
-     * Wydatek: płacący +amount, każda osoba z podziału −swój udział.
-     * Spłata `from` → `to`: dłużnik `from` +amount, wierzyciel `to` −amount.
-     */
+    // Dodatnie saldo = inni są tej osobie winni, ujemne = ona jest winna innym.
     fun netBalances(expenses: List<Expense>, settlements: List<Settlement>): Map<String, Long> {
         val balances = mutableMapOf<String, Long>()
         fun add(uid: String, value: Long) {
@@ -50,11 +36,8 @@ object BalanceCalculator {
         return balances
     }
 
-    /**
-     * Zamienia salda na jak najmniej przelewów (algorytm zachłanny):
-     * największy dłużnik oddaje największemu wierzycielowi, ile się da, i tak do zera.
-     * Przy remisach decyduje uid, żeby u wszystkich wynik był ten sam.
-     */
+    // Zachłannie: największy dłużnik oddaje największemu wierzycielowi, ile się da.
+    // Przy remisach decyduje uid, żeby u wszystkich wynik był ten sam.
     fun simplifyDebts(balances: Map<String, Long>): List<Debt> {
         val order = compareByDescending<Pair<String, Long>> { it.second }.thenBy { it.first }
         val debtors = balances.filter { it.value < 0 }.map { it.key to -it.value }.toMutableList()

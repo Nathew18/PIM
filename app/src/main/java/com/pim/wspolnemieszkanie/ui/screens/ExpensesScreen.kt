@@ -1,5 +1,6 @@
 package com.pim.wspolnemieszkanie.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -7,20 +8,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -29,7 +25,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,41 +34,50 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.pim.wspolnemieszkanie.data.BalanceCalculator
+import com.pim.wspolnemieszkanie.AddExpenseActivity
+import com.pim.wspolnemieszkanie.AddExpenseRequest
 import com.pim.wspolnemieszkanie.data.Debt
 import com.pim.wspolnemieszkanie.data.Expense
 import com.pim.wspolnemieszkanie.data.ExpenseCategory
 import com.pim.wspolnemieszkanie.data.Flat
 import com.pim.wspolnemieszkanie.data.Money
 import com.pim.wspolnemieszkanie.data.Settlement
-import com.pim.wspolnemieszkanie.viewmodel.ExpenseDraft
 import com.pim.wspolnemieszkanie.viewmodel.ExpensesViewModel
 import com.google.firebase.Timestamp
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 private val polish: Locale = Locale.forLanguageTag("pl")
 private val monthFormatter = DateTimeFormatter.ofPattern("LLLL yyyy", polish)
 private val dayFormatter = DateTimeFormatter.ofPattern("d MMM", polish)
 
-/** Zakładka „Wydatki” (Osoba 2): saldo, kto komu ile, historia z filtrami, dodawanie. */
 @Composable
 fun ExpensesScreen(flat: Flat?, viewModel: ExpensesViewModel) {
     if (flat == null) {
-        PlaceholderScreen("Wydatki", "Najpierw utwórz mieszkanie w zakładce Mieszkanie")
+        PlaceholderScreen("Wydatki", "Najpierw utwórz mieszkanie albo dołącz do niego w zakładce Mieszkanie")
         return
     }
-    LaunchedEffect(flat.id, flat.memberIds) { viewModel.bind(flat.id, flat.memberIds) }
+    LaunchedEffect(flat) { viewModel.bind(flat) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val addExpense = rememberLauncherForActivityResult(AddExpenseActivity.Contract()) { added ->
+        if (added != null) {
+            scope.launch {
+                snackbarHostState.showSnackbar("Dodano: ${added.description} (${Money.format(added.amount)})")
+            }
+        }
+    }
 
     var selectedExpense by remember { mutableStateOf<Expense?>(null) }
     var debtToSettle by remember { mutableStateOf<Debt?>(null) }
@@ -132,16 +138,20 @@ fun ExpensesScreen(flat: Flat?, viewModel: ExpensesViewModel) {
         }
 
         ExtendedFloatingActionButton(
-            onClick = { viewModel.openForm() },
+            onClick = { addExpense.launch(AddExpenseRequest(flat)) },
             icon = { Text("+", style = MaterialTheme.typography.titleLarge) },
             text = { Text("Dodaj wydatek") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
         )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 80.dp),
+        )
     }
-
-    viewModel.formDraft?.let { draft -> AddExpenseDialog(draft, viewModel) }
 
     selectedExpense?.let { expense ->
         ExpenseDetailsDialog(
@@ -171,8 +181,6 @@ fun ExpensesScreen(flat: Flat?, viewModel: ExpensesViewModel) {
         )
     }
 }
-
-// ---------- Saldo (FR7, FR8) ----------
 
 @Composable
 private fun BalanceCard(viewModel: ExpensesViewModel, onSettle: (Debt) -> Unit) {
@@ -222,8 +230,6 @@ private fun BalanceCard(viewModel: ExpensesViewModel, onSettle: (Debt) -> Unit) 
         }
     }
 }
-
-// ---------- Historia i filtry (FR9) ----------
 
 @Composable
 private fun HistoryHeader(viewModel: ExpensesViewModel) {
@@ -378,131 +384,6 @@ private fun ExpenseDetailsDialog(expense: Expense, viewModel: ExpensesViewModel,
         },
     )
 }
-
-// ---------- Formularz (FR5, FR6) ----------
-
-@Composable
-private fun AddExpenseDialog(draft: ExpenseDraft, viewModel: ExpensesViewModel) {
-    val members = viewModel.memberIds
-    var amountText by remember { mutableStateOf(draft.amountText) }
-    var description by remember { mutableStateOf(draft.description) }
-    var category by remember { mutableStateOf(draft.category) }
-    var paidBy by remember { mutableStateOf(viewModel.currentUserId) }
-    var participants by remember { mutableStateOf(members.toSet()) }
-
-    // Podgląd podziału na żywo.
-    val amount = Money.parse(amountText)
-    val ordered = members.filter { it in participants }
-    val preview = if (amount != null && amount > 0 && ordered.isNotEmpty()) {
-        BalanceCalculator.splitEqually(amount, ordered)
-    } else {
-        emptyMap()
-    }
-
-    AlertDialog(
-        onDismissRequest = viewModel::closeForm,
-        title = { Text("Nowy wydatek") },
-        text = {
-            Column(
-                Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = { Text("Kwota (zł)") },
-                    placeholder = { Text("np. 45,90") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Opis (opcjonalnie)") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Text("Kategoria", style = MaterialTheme.typography.titleSmall)
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ExpenseCategory.entries.forEach { option ->
-                        FilterChip(
-                            selected = category == option,
-                            onClick = { category = option },
-                            label = { Text("${option.icon} ${option.label}") },
-                        )
-                    }
-                }
-
-                Text("Kto zapłacił", style = MaterialTheme.typography.titleSmall)
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    members.forEach { uid ->
-                        FilterChip(
-                            selected = paidBy == uid,
-                            onClick = { paidBy = uid },
-                            label = { Text(viewModel.displayName(uid)) },
-                        )
-                    }
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Podziel między", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                    TextButton(onClick = {
-                        participants = if (participants.size == members.size) emptySet() else members.toSet()
-                    }) {
-                        Text(if (participants.size == members.size) "Odznacz" else "Wszyscy")
-                    }
-                }
-                members.forEach { uid ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                participants = if (uid in participants) participants - uid else participants + uid
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(
-                            checked = uid in participants,
-                            onCheckedChange = { checked ->
-                                participants = if (checked) participants + uid else participants - uid
-                            },
-                        )
-                        Text(viewModel.displayName(uid), modifier = Modifier.weight(1f))
-                        preview[uid]?.let {
-                            Text(
-                                Money.format(it),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-
-                viewModel.formError?.let {
-                    Spacer(Modifier.height(4.dp))
-                    Text(it, color = MaterialTheme.colorScheme.error)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                viewModel.addExpense(amountText, description, category, paidBy, ordered)
-            }) { Text("Zapisz") }
-        },
-        dismissButton = { TextButton(onClick = viewModel::closeForm) { Text("Anuluj") } },
-    )
-}
-
-// ---------- Pomocnicze ----------
 
 private fun monthLabel(month: YearMonth): String =
     month.format(monthFormatter).replaceFirstChar { it.titlecase(polish) }

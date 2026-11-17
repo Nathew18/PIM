@@ -5,7 +5,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 
-/** Wydatki i spłaty mieszkania: flats/{flatId}/expenses i flats/{flatId}/settlements. */
 class ExpenseRepository {
 
     private val db = FirebaseFirestore.getInstance()
@@ -16,7 +15,6 @@ class ExpenseRepository {
     private fun settlements(flatId: String) =
         db.collection("flats").document(flatId).collection("settlements")
 
-    /** Wszystkie wydatki mieszkania na żywo, najnowsze pierwsze (NFR2). */
     fun observeExpenses(
         flatId: String,
         onChange: (List<Expense>) -> Unit,
@@ -34,7 +32,6 @@ class ExpenseRepository {
                 })
             }
 
-    /** Wszystkie spłaty mieszkania na żywo, najnowsze pierwsze. */
     fun observeSettlements(
         flatId: String,
         onChange: (List<Settlement>) -> Unit,
@@ -52,10 +49,7 @@ class ExpenseRepository {
                 })
             }
 
-    /**
-     * Zapisuje wydatek (FR5, FR6). Firestore od razu pokazuje go w listenerze (także offline),
-     * a onError przychodzi tylko, gdy serwer go odrzuci.
-     */
+    // Firestore od razu pokazuje wydatek w listenerze (także offline), onError tylko przy odrzuceniu.
     fun addExpense(
         flatId: String,
         amount: Long,
@@ -64,7 +58,7 @@ class ExpenseRepository {
         paidBy: String,
         shares: Map<String, Long>,
         createdBy: String,
-        onError: () -> Unit,
+        onError: () -> Unit = {},
     ) {
         expenses(flatId).add(
             hashMapOf(
@@ -83,7 +77,6 @@ class ExpenseRepository {
         expenses(flatId).document(expenseId).delete().addOnFailureListener { onError() }
     }
 
-    /** Oznacza dług jako spłacony (FR8): `from` oddał `to` kwotę `amount`. */
     fun addSettlement(
         flatId: String,
         from: String,
