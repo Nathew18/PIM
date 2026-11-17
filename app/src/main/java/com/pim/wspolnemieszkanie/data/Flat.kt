@@ -7,4 +7,5 @@ data class Flat(
     var inviteCode: String = "",
     var ownerId: String = "",
     var memberIds: List<String> = emptyList(),
+    var memberNames: Map<String, String> = emptyMap(),
 )

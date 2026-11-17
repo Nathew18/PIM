@@ -8,6 +8,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ListenerRegistration
 import com.pim.wspolnemieszkanie.data.Flat
 import com.pim.wspolnemieszkanie.data.FlatRepository
+import com.pim.wspolnemieszkanie.data.isValidInviteCode
+import com.pim.wspolnemieszkanie.data.normalizeInviteCode
 
 class FlatViewModel : ViewModel() {
 
@@ -19,10 +21,13 @@ class FlatViewModel : ViewModel() {
         private set
     var isLoading by mutableStateOf(true)
         private set
-    var isCreating by mutableStateOf(false)
+    var isSaving by mutableStateOf(false)
         private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
+
+    val currentUserId: String?
+        get() = auth.currentUser?.uid
 
     // ViewModel żyje dłużej niż sesja, więc po zmianie konta trzeba wczytać mieszkanie od nowa.
     // Bez tego następny użytkownik zobaczyłby mieszkanie i kod poprzedniego.
@@ -35,22 +40,72 @@ class FlatViewModel : ViewModel() {
     }
 
     fun createFlat(name: String) {
-        val userId = auth.currentUser?.uid ?: return
+        val userId = currentUserId ?: return
         if (name.isBlank()) {
             errorMessage = "Podaj nazwę mieszkania"
             return
         }
-        isCreating = true
-        errorMessage = null
+        startSaving()
         repository.createFlat(
             name = name.trim(),
             userId = userId,
-            onSuccess = { isCreating = false },
-            onError = {
-                isCreating = false
-                errorMessage = "Nie udało się utworzyć mieszkania, sprawdź połączenie z internetem"
-            },
+            userName = currentUserName(),
+            onSuccess = { isSaving = false },
+            onError = { showError("Nie udało się utworzyć mieszkania, sprawdź połączenie z internetem") },
         )
+    }
+
+    fun joinFlat(codeText: String) {
+        val userId = currentUserId ?: return
+        val code = normalizeInviteCode(codeText)
+        if (!isValidInviteCode(code)) {
+            errorMessage = "Nieprawidłowy kod zaproszenia"
+            return
+        }
+        startSaving()
+        repository.joinFlat(
+            code = code,
+            userId = userId,
+            userName = currentUserName(),
+            onSuccess = { isSaving = false },
+            onCodeNotFound = { showError("Nie ma mieszkania z tym kodem") },
+            onError = { showError("Nie udało się dołączyć, sprawdź połączenie z internetem") },
+        )
+    }
+
+    fun leaveFlat() {
+        val userId = currentUserId ?: return
+        val currentFlat = flat ?: return
+        startSaving()
+        repository.leaveFlat(
+            flat = currentFlat,
+            userId = userId,
+            onSuccess = { isSaving = false },
+            onError = { showError("Nie udało się opuścić mieszkania, sprawdź połączenie z internetem") },
+        )
+    }
+
+    fun clearError() {
+        errorMessage = null
+    }
+
+    fun showScannerError() {
+        errorMessage = "Nie udało się uruchomić skanera, wpisz kod ręcznie"
+    }
+
+    private fun currentUserName(): String {
+        val user = auth.currentUser
+        return user?.displayName?.takeIf { it.isNotBlank() } ?: user?.email ?: "Współlokator"
+    }
+
+    private fun startSaving() {
+        isSaving = true
+        errorMessage = null
+    }
+
+    private fun showError(message: String) {
+        isSaving = false
+        errorMessage = message
     }
 
     private fun observeFlat(userId: String?) {

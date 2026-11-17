@@ -34,6 +34,7 @@ import com.pim.wspolnemieszkanie.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(viewModel: AuthViewModel) {
     var isRegisterMode by rememberSaveable { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     // Hasła celowo przez remember: rememberSaveable zapisałby je w stanie systemu.
     var password by remember { mutableStateOf("") }
@@ -56,6 +57,15 @@ fun LoginScreen(viewModel: AuthViewModel) {
                 style = MaterialTheme.typography.titleMedium,
             )
 
+            if (isRegisterMode) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Imię") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -92,7 +102,7 @@ fun LoginScreen(viewModel: AuthViewModel) {
             Button(
                 onClick = {
                     if (isRegisterMode) {
-                        viewModel.register(email, password, repeatedPassword)
+                        viewModel.register(name, email, password, repeatedPassword)
                     } else {
                         viewModel.login(email, password)
                     }
