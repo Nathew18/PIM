@@ -65,10 +65,6 @@ class AuthViewModel : ViewModel() {
         runAuthTask(task)
     }
 
-    fun logout() {
-        auth.signOut()
-    }
-
     fun clearError() {
         errorMessage = null
     }

@@ -1,31 +1,43 @@
 package com.pim.wspolnemieszkanie
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import com.google.firebase.auth.FirebaseAuth
 import com.pim.wspolnemieszkanie.ui.MainScreen
-import com.pim.wspolnemieszkanie.ui.screens.LoginScreen
 import com.pim.wspolnemieszkanie.ui.theme.WspolneMieszkanieTheme
-import com.pim.wspolnemieszkanie.viewmodel.AuthViewModel
 import com.pim.wspolnemieszkanie.viewmodel.FlatViewModel
 
 class MainActivity : ComponentActivity() {
-    private val authViewModel: AuthViewModel by viewModels()
     private val flatViewModel: FlatViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            openLogin()
+            return
+        }
         enableEdgeToEdge()
         setContent {
             WspolneMieszkanieTheme {
-                if (authViewModel.isLoggedIn) {
-                    MainScreen(flatViewModel, onLogout = authViewModel::logout)
-                } else {
-                    LoginScreen(authViewModel)
-                }
+                MainScreen(flatViewModel, onLogout = ::logout)
             }
         }
+    }
+
+    private fun logout() {
+        FirebaseAuth.getInstance().signOut()
+        openLogin()
+    }
+
+    // CLEAR_TASK czyści stos, żeby po wylogowaniu nie dało się wrócić "wstecz" do aplikacji.
+    private fun openLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
 }
