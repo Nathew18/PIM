@@ -26,8 +26,12 @@ class AuthViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    // Konto istnieje już przed zapisaniem imienia, a do tego czasu nie wpuszczamy dalej,
+    // bo mieszkanie zapisałoby e-mail zamiast imienia.
+    private var isRegistering = false
+
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-        isLoggedIn = firebaseAuth.currentUser != null
+        isLoggedIn = firebaseAuth.currentUser != null && !isRegistering
     }
 
     init {
@@ -55,13 +59,17 @@ class AuthViewModel : ViewModel() {
             errorMessage = "Hasła nie są takie same"
             return
         }
+        isRegistering = true
         val task = auth.createUserWithEmailAndPassword(email.trim(), password)
-        task.addOnSuccessListener { result ->
-            val profile = UserProfileChangeRequest.Builder()
-                .setDisplayName(name.trim())
-                .build()
-            result.user?.updateProfile(profile)
-        }
+            .continueWithTask { created ->
+                if (!created.isSuccessful) return@continueWithTask created
+                val user = created.result.user ?: return@continueWithTask created
+                val profile = UserProfileChangeRequest.Builder()
+                    .setDisplayName(name.trim())
+                    .build()
+                // Błąd zapisu imienia nie cofa rejestracji, wtedy w mieszkaniu pojawi się e-mail.
+                user.updateProfile(profile).continueWithTask { created }
+            }
         runAuthTask(task)
     }
 
@@ -74,6 +82,8 @@ class AuthViewModel : ViewModel() {
         errorMessage = null
         task.addOnCompleteListener { result ->
             isLoading = false
+            isRegistering = false
+            isLoggedIn = auth.currentUser != null
             if (!result.isSuccessful) {
                 errorMessage = polishMessage(result.exception)
             }
