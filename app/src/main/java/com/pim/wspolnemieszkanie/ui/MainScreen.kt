@@ -19,6 +19,7 @@ import com.pim.wspolnemieszkanie.ui.screens.FlatScreen
 import com.pim.wspolnemieszkanie.ui.screens.ShoppingScreen
 import com.pim.wspolnemieszkanie.viewmodel.ExpensesViewModel
 import com.pim.wspolnemieszkanie.viewmodel.FlatViewModel
+import com.pim.wspolnemieszkanie.viewmodel.ShoppingViewModel
 
 enum class Tab(val label: String, val icon: String) {
     EXPENSES("Wydatki", "💰"),
@@ -31,6 +32,7 @@ enum class Tab(val label: String, val icon: String) {
 fun MainScreen(
     flatViewModel: FlatViewModel,
     expensesViewModel: ExpensesViewModel,
+    shoppingViewModel: ShoppingViewModel,
     onLogout: () -> Unit,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(Tab.EXPENSES) }
@@ -56,7 +58,7 @@ fun MainScreen(
         ) {
             when (selectedTab) {
                 Tab.EXPENSES -> ExpensesScreen(flatViewModel.flat, expensesViewModel)
-                Tab.SHOPPING -> ShoppingScreen()
+                Tab.SHOPPING -> ShoppingScreen(flatViewModel.flat, shoppingViewModel)
                 Tab.CHORES -> ChoresScreen()
                 Tab.FLAT -> FlatScreen(flatViewModel, onLogout)
             }

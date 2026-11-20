@@ -11,10 +11,13 @@ import com.pim.wspolnemieszkanie.ui.MainScreen
 import com.pim.wspolnemieszkanie.ui.theme.WspolneMieszkanieTheme
 import com.pim.wspolnemieszkanie.viewmodel.ExpensesViewModel
 import com.pim.wspolnemieszkanie.viewmodel.FlatViewModel
+import com.pim.wspolnemieszkanie.viewmodel.ShoppingViewModel
 
 class MainActivity : ComponentActivity() {
     private val flatViewModel: FlatViewModel by viewModels()
     private val expensesViewModel: ExpensesViewModel by viewModels()
+    private val shoppingViewModel: ShoppingViewModel by viewModels()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +28,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WspolneMieszkanieTheme {
-                MainScreen(flatViewModel, expensesViewModel, onLogout = ::logout)
+                MainScreen(flatViewModel, expensesViewModel, shoppingViewModel = shoppingViewModel,onLogout = ::logout)
             }
         }
     }
