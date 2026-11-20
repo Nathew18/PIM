@@ -21,7 +21,8 @@ Projekt na przedmiot **Programowanie interfejsów mobilnych** (PWr, semestr zimo
 ## Struktura kodu
 ```
 app/src/main/java/com/pim/wspolnemieszkanie/
-├── MainActivity.kt        # punkt startowy
+├── LoginActivity.kt       # punkt startowy: logowanie i rejestracja
+├── MainActivity.kt        # aplikacja po zalogowaniu (zakładki)
 ├── ui/
 │   ├── MainScreen.kt      # Scaffold + dolny pasek zakładek
 │   ├── screens/           # ekrany: Logowanie, Wydatki, Zakupy, Obowiązki, Mieszkanie
