@@ -170,6 +170,7 @@ fun AddExpenseScreen(
                     viewModel.save(flatId, memberIds, amountText, description, category, paidBy, participants)
                         ?.let(onSaved)
                 },
+                enabled = !viewModel.isSaved,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Zapisz wydatek")
