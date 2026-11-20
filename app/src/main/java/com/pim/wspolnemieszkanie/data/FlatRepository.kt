@@ -1,5 +1,6 @@
 package com.pim.wspolnemieszkanie.data
 
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -94,12 +95,13 @@ class FlatRepository {
         // W transakcji czytamy aktualną listę, bo ktoś mógł w tym czasie dołączyć albo wyjść.
         db.runTransaction { transaction ->
             val current = transaction.get(flatRef).toObject(Flat::class.java)
-                ?: return@runTransaction
+                ?: return@runTransaction false
             val remaining = current.memberIds - userId
 
             if (remaining.isEmpty()) {
                 transaction.delete(flatRef)
                 transaction.delete(codeRef)
+                true
             } else {
                 val newOwnerId =
                     if (current.ownerId == userId) remaining.first() else current.ownerId
@@ -111,11 +113,33 @@ class FlatRepository {
                         "ownerId" to newOwnerId,
                     ),
                 )
+                false
             }
-        }.addOnSuccessListener {
+        }.addOnSuccessListener { flatDeleted ->
+            if (flatDeleted) deleteFlatData(flatRef.id)
             onSuccess()
         }.addOnFailureListener {
             onError()
+        }
+    }
+
+    // Firestore nie usuwa podkolekcji razem z dokumentem, więc bez tego wydatki i zakupy zostałyby na zawsze.
+    private fun deleteFlatData(flatId: String) {
+        val flatRef = db.collection("flats").document(flatId)
+        listOf("expenses", "settlements", "shopping").forEach { name ->
+            deleteCollection(flatRef.collection(name))
+        }
+    }
+
+    // Batch mieści do 500 operacji, więc większe kolekcje usuwamy partiami.
+    private fun deleteCollection(collection: CollectionReference) {
+        collection.limit(DELETE_BATCH_SIZE).get().addOnSuccessListener { snapshot ->
+            if (snapshot.isEmpty) return@addOnSuccessListener
+            val batch = db.batch()
+            snapshot.documents.forEach { batch.delete(it.reference) }
+            batch.commit().addOnSuccessListener {
+                if (snapshot.size() >= DELETE_BATCH_SIZE) deleteCollection(collection)
+            }
         }
     }
 
@@ -135,4 +159,8 @@ class FlatRepository {
                 val document = snapshot.documents.firstOrNull()
                 onChange(document?.toObject(Flat::class.java)?.copy(id = document.id))
             }
+
+    private companion object {
+        const val DELETE_BATCH_SIZE = 400L
+    }
 }

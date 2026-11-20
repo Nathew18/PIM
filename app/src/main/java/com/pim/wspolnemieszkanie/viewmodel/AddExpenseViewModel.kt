@@ -18,6 +18,10 @@ class AddExpenseViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    // Aktywność zamyka się z opóźnieniem, więc szybkie drugie kliknięcie dodałoby wydatek drugi raz.
+    var isSaved by mutableStateOf(false)
+        private set
+
     val currentUserId: String
         get() = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
 
@@ -35,6 +39,7 @@ class AddExpenseViewModel : ViewModel() {
         paidBy: String,
         participants: List<String>,
     ): AddedExpense? {
+        if (isSaved) return null
         val amount = Money.parse(amountText)
         errorMessage = when {
             amount == null || amount <= 0 -> "Podaj poprawną kwotę, np. 12,50"
@@ -58,6 +63,7 @@ class AddExpenseViewModel : ViewModel() {
             shares = BalanceCalculator.splitEqually(amount, ordered),
             createdBy = currentUserId,
         )
+        isSaved = true
         return AddedExpense(finalDescription, amount)
     }
 }

@@ -25,6 +25,9 @@ class ExpensesViewModel : ViewModel() {
     private var flatId: String? = null
     private var listeners: List<ListenerRegistration> = emptyList()
 
+    // Blokuje drugą spłatę, zanim lokalny zapis wróci w listenerze i przeliczy długi.
+    private var isSettling = false
+
     var expenses by mutableStateOf<List<Expense>>(emptyList())
         private set
     var settlements by mutableStateOf<List<Settlement>>(emptyList())
@@ -69,6 +72,7 @@ class ExpensesViewModel : ViewModel() {
         listeners.forEach { it.remove() }
         expenses = emptyList()
         settlements = emptyList()
+        isSettling = false
         isLoading = true
         errorMessage = null
         listeners = listOf(
@@ -85,10 +89,22 @@ class ExpensesViewModel : ViewModel() {
             ),
             repository.observeSettlements(
                 flat.id,
-                onChange = { settlements = it },
+                onChange = {
+                    settlements = it
+                    isSettling = false
+                },
                 onError = { errorMessage = "Nie udało się wczytać spłat" },
             ),
         )
+    }
+
+    fun unbind() {
+        isSettling = false
+        listeners.forEach { it.remove() }
+        listeners = emptyList()
+        flatId = null
+        expenses = emptyList()
+        settlements = emptyList()
     }
 
     fun displayName(uid: String): String = when {
@@ -104,15 +120,22 @@ class ExpensesViewModel : ViewModel() {
         }
     }
 
+    // Dialog pokazuje dług z chwili otwarcia, a w międzyczasie ktoś mógł go już spłacić.
     fun settle(debt: Debt) {
         val flatId = flatId ?: return
+        if (isSettling) return
+        val current = debts.firstOrNull { it.from == debt.from && it.to == debt.to } ?: return
+        isSettling = true
         repository.addSettlement(
             flatId = flatId,
             from = debt.from,
             to = debt.to,
-            amount = debt.amount,
+            amount = minOf(debt.amount, current.amount),
             createdBy = currentUserId,
-            onError = { errorMessage = "Nie udało się zapisać spłaty" },
+            onError = {
+                isSettling = false
+                errorMessage = "Nie udało się zapisać spłaty"
+            },
         )
     }
 
