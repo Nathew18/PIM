@@ -23,6 +23,7 @@ Projekt na przedmiot **Programowanie interfejsów mobilnych** (PWr, semestr zimo
 app/src/main/java/com/pim/wspolnemieszkanie/
 ├── LoginActivity.kt       # punkt startowy: logowanie i rejestracja
 ├── MainActivity.kt        # aplikacja po zalogowaniu (zakładki)
+├── AddExpenseActivity.kt  # formularz nowego wydatku, zwraca wynik do MainActivity
 ├── ui/
 │   ├── MainScreen.kt      # Scaffold + dolny pasek zakładek
 │   ├── screens/           # ekrany: Logowanie, Wydatki, Zakupy, Obowiązki, Mieszkanie
