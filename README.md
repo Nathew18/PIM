@@ -18,6 +18,9 @@ Projekt na przedmiot **Programowanie interfejsów mobilnych** (PWr, semestr zimo
 
 > Plik `app/google-services.json` z Firebase jest w repozytorium. To konfiguracja klienta, nie sekret: dane mają chronić reguły Firestore. Na razie reguły są tymczasowe i wpuszczają każdego zalogowanego, właściwe dojdą w #7, więc nie wpisuj prawdziwych danych.
 
+## Mieszkanie testowe
+Do sprawdzenia aplikacji jest przygotowane mieszkanie testowe. Załóż konto, przejdź do zakładki **Mieszkanie** i wpisz kod zaproszenia **`V4LM7R`** w polu „Kod zaproszenia”, a potem kliknij „Dołącz”.
+
 ## Struktura kodu
 ```
 app/src/main/java/com/pim/wspolnemieszkanie/
