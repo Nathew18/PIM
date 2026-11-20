@@ -91,6 +91,14 @@ class ExpensesViewModel : ViewModel() {
         )
     }
 
+    fun unbind() {
+        listeners.forEach { it.remove() }
+        listeners = emptyList()
+        flatId = null
+        expenses = emptyList()
+        settlements = emptyList()
+    }
+
     fun displayName(uid: String): String = when {
         uid == currentUserId -> "Ty"
         uid in memberIds -> memberNames[uid] ?: "Współlokator"

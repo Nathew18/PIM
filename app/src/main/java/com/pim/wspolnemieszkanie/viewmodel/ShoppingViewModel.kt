@@ -49,6 +49,13 @@ class ShoppingViewModel : ViewModel() {
         )
     }
 
+    fun unbind() {
+        listener?.remove()
+        listener = null
+        flatId = null
+        items = emptyList()
+    }
+
     fun addItem(name: String, quantityText: String): Boolean {
         val currentFlatId = flatId ?: return false
         val trimmed = name.trim()
